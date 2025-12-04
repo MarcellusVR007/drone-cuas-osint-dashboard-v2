@@ -28,7 +28,7 @@ class Site(Base):
         type: Site type from SiteType enum
         country_code: ISO 3166-1 alpha-2 country code
         geom_wkt: Geometry as WKT string (Point, Polygon, etc.)
-        metadata: JSONB field for flexible metadata storage
+        site_metadata: JSONB field for flexible metadata storage
     """
 
     __tablename__ = "sites"
@@ -38,7 +38,7 @@ class Site(Base):
     type = Column(Enum(SiteType), nullable=False, index=True)
     country_code = Column(String(2), index=True)  # e.g., "NL", "US", "GB"
     geom_wkt = Column(String, nullable=True)  # WKT format: "POINT(5.7 51.6)"
-    metadata = Column(JSON, nullable=True)  # JSONB in PostgreSQL
+    site_metadata = Column(JSON, nullable=True)  # JSONB in PostgreSQL (renamed from 'metadata' which is reserved)
 
     # Relationships
     incidents = relationship("Incident", back_populates="site")

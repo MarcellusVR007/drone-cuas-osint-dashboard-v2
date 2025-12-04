@@ -2,9 +2,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (postgresql-client only for migrations)
 RUN apt-get update && apt-get install -y \
-    gcc \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
