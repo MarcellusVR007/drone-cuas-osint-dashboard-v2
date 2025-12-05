@@ -47,6 +47,8 @@ from .behaviour_model_v2 import (
     compute_composite_score_v2,
 )
 
+from .site_boundary import get_site_boundary_by_location, SiteBoundary
+
 logger = logging.getLogger(__name__)
 
 
@@ -163,6 +165,14 @@ class OperatorHideoutEngineV2:
         """
         logger.info(f"V2 prediction for incident {incident_id} at ({target_lat:.4f}, {target_lon:.4f})")
 
+        # Detect site boundary (if near a known site)
+        site_boundary = get_site_boundary_by_location(target_lat, target_lon, radius_km=5.0)
+        if site_boundary:
+            logger.info(f"Site boundary detected: {site_boundary.site_name} "
+                       f"(radius: {site_boundary.radius_m}m, buffer: {site_boundary.safety_buffer_m}m)")
+        else:
+            logger.info("No known site boundary detected - using default perimeter")
+
         # Load terrain data
         logger.info("Loading terrain intelligence...")
         osm_data = load_osm_landuse(target_lat, target_lon, self.search_radius_m / 1000)
@@ -181,7 +191,15 @@ class OperatorHideoutEngineV2:
 
         # Score each candidate with V2 model
         scored_hotspots = []
+        filtered_count = 0
         for candidate in candidates:
+            # HARD CONSTRAINT: Filter out candidates inside site boundary
+            if site_boundary and site_boundary.is_inside_boundary(candidate["lat"], candidate["lon"]):
+                filtered_count += 1
+                logger.debug(f"Filtered candidate at ({candidate['lat']:.4f}, {candidate['lon']:.4f}) "
+                            f"- inside {site_boundary.site_name} boundary")
+                continue
+
             hotspot = self._score_candidate_v2(
                 candidate["lat"],
                 candidate["lon"],
@@ -196,6 +214,9 @@ class OperatorHideoutEngineV2:
                 evidence_weight,
             )
             scored_hotspots.append(hotspot)
+
+        if filtered_count > 0:
+            logger.info(f"Filtered {filtered_count}/{len(candidates)} candidates inside site boundary")
 
         # Rank by total score
         scored_hotspots.sort(key=lambda h: h.total_score, reverse=True)
