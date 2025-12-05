@@ -18,56 +18,134 @@ V2 is a complete rewrite of the OSINT CUAS Dashboard with:
 - Basic CRUD API endpoints
 - Docker Compose setup
 
+**Sprint 2: Intelligence Layer** ✅
+- Evidence Stack Builder (aggregation, deduplication, scoring)
+- LLM Evidence Enrichment (drone type, flight dynamics, altitude)
+- Operator Hideout Engine (OPSEC-TTP analysis)
+- Intelligence API endpoint (`/incidents/{id}/intelligence`)
+
+**Sprint 3: Frontend Application** ✅
+- Vue 3 + TypeScript + Vite
+- Incidents list and detail pages
+- Interactive Leaflet maps with operator hotspots
+- Drone profile, flight dynamics, and evidence visualization
+- Docker integration
+
 **Future Sprints:**
-- Sprint 2: LLM enrichment layer
-- Sprint 3: Operator hideout engine
-- Sprint 4: Evidence stacking
-- Sprint 5: Data ingestion pipeline
-- Sprint 6: Frontend integration
+- Sprint 4: Styling & UX improvements (Tailwind CSS)
+- Sprint 5: Data ingestion pipeline (scrapers, feeds)
+- Sprint 6: Authentication & authorization
+- Sprint 7: Real-time updates & notifications
 
 ## Architecture
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture rules.
 
 ```
-backend/
-├── app/
-│   ├── domain/       # ORM models only
-│   ├── services/     # Business logic
-│   ├── llm/          # LLM prompts & schemas
-│   ├── db/           # Database session/engine
-│   └── api/          # FastAPI routes
+drone-cuas-osint-dashboard-v2/
+├── backend/
+│   └── app/
+│       ├── domain/       # ORM models only
+│       ├── services/     # Business logic
+│       ├── llm/          # LLM prompts & schemas
+│       ├── db/           # Database session/engine
+│       └── api/          # FastAPI routes
+├── frontend/
+│   └── src/
+│       ├── api/          # API client layer
+│       ├── components/   # Vue components
+│       ├── pages/        # Route pages
+│       ├── App.vue       # Root component
+│       ├── main.ts       # Entry point
+│       └── router.ts     # Route definitions
+├── docker-compose.yml    # Multi-service orchestration
+└── scripts/              # Utility scripts
 ```
 
 ## Quick Start
 
-1. **Start services:**
+### Using Docker (Recommended)
+
+1. **Start all services:**
    ```bash
-   ./scripts/run_local.sh
+   docker-compose up -d
    ```
 
-2. **Run migrations:**
-   ```bash
-   docker-compose exec backend alembic upgrade head
-   ```
+2. **Access the application:**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:8000
+   - API Docs: http://localhost:8000/docs
 
-3. **Test endpoints:**
-   ```bash
-   python scripts/check_sanity.py
-   ```
+### Local Development
+
+**Backend:**
+```bash
+# Set up Python environment
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r requirements.txt
+
+# Start PostgreSQL (or use Docker)
+docker-compose up -d postgres
+
+# Run migrations
+alembic upgrade head
+
+# Start backend
+uvicorn backend.app.main:app --reload
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
 ## API Endpoints
 
+### Core Endpoints
 - `GET /health` - Health check
 - `GET /incidents` - List incidents (paginated)
 - `GET /incidents/{id}` - Get incident detail
 - `GET /sites` - List sites
 
-## Development
+### Intelligence Endpoint (Sprint 2)
+- `GET /incidents/{id}/intelligence` - Full intelligence analysis
+  - Drone profile (type, size, lights, confidence)
+  - Flight dynamics (vectors, altitude, speed, patterns)
+  - Operator hotspots (OPSEC-TTP predicted locations)
+  - Evidence stack (sources, credibility, locality scores)
 
-- **Backend:** FastAPI + SQLAlchemy 2.0 + PostgreSQL 15
+### Frontend Routes (Sprint 3)
+- `/` - Redirects to incidents list
+- `/incidents` - Incidents list page (table with pagination)
+- `/incidents/:id` - Incident detail page (intelligence visualization)
+
+## Tech Stack
+
+### Backend
+- **Framework:** FastAPI 0.115+
+- **Database:** PostgreSQL 15
+- **ORM:** SQLAlchemy 2.0
 - **Migrations:** Alembic
-- **Docker:** `docker-compose.yml` for local dev
+- **LLM:** Anthropic Claude (optional, falls back to mock)
+
+### Frontend
+- **Framework:** Vue 3.4+ (Composition API)
+- **Language:** TypeScript 5.3+
+- **Build Tool:** Vite 5.0+
+- **Routing:** Vue Router 4.2+
+- **HTTP Client:** Axios 1.6+
+- **Maps:** Leaflet 1.9+
+
+### Infrastructure
+- **Containerization:** Docker + Docker Compose
+- **Orchestration:** docker-compose.yml (3 services)
+- **Ports:**
+  - Frontend: 5173
+  - Backend: 8000
+  - PostgreSQL: 5432
 
 ## Rules
 
